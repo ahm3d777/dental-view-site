@@ -1,0 +1,463 @@
+// =============================================================
+//  DENTAL VIEW — Orthodontics & Implant Center
+//  "Precision" design system · compiled with Dart Sass
+//  Tokens → functions → mixins → generated components
+// =============================================================
+@use "sass:map";
+@use "sass:math";
+@use "sass:list";
+
+// ---------- 1. Tokens ----------
+$paper:     #F1F0EB;
+$paper-hi:  #FAFAF6;
+$ink:       #0D0F12;
+$graphite:  #4B5058;
+$muted:     #7A7E84;
+$rule:      rgba(13, 15, 18, .14);
+$signal:    #FF4A1C;          // the only accent: orange = "measurement"
+$print:     #0D2236;          // blueprint navy for dark sections
+$print-ln:  rgba(160, 200, 255, .09);
+
+$f-display: "Instrument Serif", Georgia, serif;
+$f-mono:    "JetBrains Mono", ui-monospace, monospace;
+$f-body:    "Inter Tight", system-ui, sans-serif;
+
+$ease:   cubic-bezier(.19, 1, .22, 1);
+$snap:   cubic-bezier(.7, 0, .2, 1);
+
+$grid-minor: 24px;
+$grid-major: $grid-minor * 5;
+
+$bp: (sm: 640px, md: 920px, lg: 1120px);
+
+// ---------- 2. Mixins ----------
+@mixin below($k) { @media (max-width: map.get($bp, $k)) { @content; } }
+
+@mixin fluid($prop, $min, $max, $vmin: 380px, $vmax: 1280px) {
+  $slope: math.div($max - $min, $vmax - $vmin);
+  #{$prop}: clamp(#{$min}, #{$min - $slope * $vmin} + #{$slope * 100}vw, #{$max});
+}
+
+// Drafting-paper grid (minor + major lines)
+@mixin drafting($line-minor, $line-major, $minor: $grid-minor, $major: $grid-major) {
+  background-image:
+    linear-gradient($line-major 1px, transparent 1px),
+    linear-gradient(90deg, $line-major 1px, transparent 1px),
+    linear-gradient($line-minor 1px, transparent 1px),
+    linear-gradient(90deg, $line-minor 1px, transparent 1px);
+  background-size: $major $major, $major $major, $minor $minor, $minor $minor;
+}
+
+// Registration corner marks on any frame (8 generated gradients)
+@mixin corners($c: $ink, $len: 14px, $w: 1.5px, $inset: 0px) {
+  position: relative;
+  &::before {
+    content: ""; position: absolute; inset: $inset; pointer-events: none; z-index: 3;
+    $imgs: ();
+    @for $i from 1 through 8 { $imgs: list.append($imgs, linear-gradient($c, $c), comma); }
+    background-image: $imgs;
+    background-repeat: no-repeat;
+    background-size: $len $w, $w $len, $len $w, $w $len, $len $w, $w $len, $len $w, $w $len;
+    background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
+  }
+}
+
+@mixin mono($size: .72rem, $track: .08em) {
+  font-family: $f-mono; font-size: $size; letter-spacing: $track; text-transform: uppercase; font-weight: 500;
+}
+
+// Measurement underline that draws in on hover
+@mixin measure-line($c: $signal) {
+  background-image: linear-gradient($c, $c);
+  background-size: 0% 1px; background-repeat: no-repeat; background-position: 0 100%;
+  transition: background-size .6s $ease;
+  &:hover { background-size: 100% 1px; }
+}
+
+@mixin stagger($n: 10, $step: 70ms, $prop: transition-delay) {
+  @for $i from 1 through $n { &:nth-child(#{$i}) { #{$prop}: $step * ($i - 1); } }
+}
+
+// ---------- 3. Keyframes ----------
+@keyframes blink   { 50% { opacity: 0; } }
+@keyframes scanline{ from { transform: translateY(-120%); } to { transform: translateY(420%); } }
+@keyframes rise    { from { transform: translateY(105%); } }
+@keyframes pop     { from { opacity: 0; transform: translateY(18px); } }
+
+// ---------- 4. Base ----------
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; overflow-x: clip; }
+body {
+  font-family: $f-body; color: $ink; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  background-color: $paper;
+  @include drafting(rgba($ink, .028), rgba($ink, .055));
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+img, svg { display: block; max-width: 100%; }
+.wrap { width: min(1280px, 100% - 48px); margin-inline: auto; @include below(sm) { width: calc(100% - 32px); } }
+section { position: relative; @include fluid(padding-block, 80px, 150px); }
+
+.tag { @include mono(.68rem, .12em); color: $graphite; display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  b { color: $signal; font-weight: 600; } }
+.display { font-family: $f-display; font-weight: 400; line-height: .92; letter-spacing: -.02em; }
+h2.display { @include fluid(font-size, 46px, 104px); }
+.display em { font-style: italic; color: $signal; }
+.lead { color: $graphite; @include fluid(font-size, 16px, 18.5px); max-width: 54ch; }
+
+// photo w/ fallback
+.ph { position: relative; overflow: hidden; background: repeating-linear-gradient(45deg, rgba($ink, .05) 0 1px, transparent 1px 10px), $paper-hi;
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .fb { position: absolute; inset: 0; display: grid; place-items: center; @include mono(.62rem); color: $muted; }
+  img + .fb { display: none; } }
+
+// ---------- 5. Buttons ----------
+.btn {
+  @include mono(.74rem, .1em); font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 17px 22px; border: 1.5px solid $ink; white-space: nowrap; position: relative; overflow: hidden; isolation: isolate;
+  transition: color .4s $ease, border-color .4s;
+  &::after { content: ""; position: absolute; inset: 0; background: $signal; transform: scaleX(0); transform-origin: right; transition: transform .5s $ease; z-index: -1; }
+  &:hover::after { transform: scaleX(1); transform-origin: left; }
+  svg { width: 16px; height: 16px; }
+  &--solid { background: $ink; color: $paper-hi; &:hover { color: $ink; border-color: $signal; } }
+  &--line  { color: $ink; &:hover { border-color: $signal; } }
+  &--light { border-color: rgba($paper, .35); color: $paper; &:hover { color: $ink; border-color: $signal; } }
+}
+
+// ---------- 6. Header ----------
+.strip {
+  background: $ink; color: rgba($paper, .7); @include mono(.64rem, .1em);
+  .wrap { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; flex-wrap: wrap; }
+  b { color: $paper; font-weight: 500; }
+  .rec { display: inline-flex; align-items: center; gap: 8px; i { width: 7px; height: 7px; background: $signal; border-radius: 50%; animation: blink 1.4s steps(1) infinite; } }
+  @include below(sm) { .hide { display: none; } }
+}
+.head {
+  position: sticky; top: 0; z-index: 50; background: rgba($paper, .92);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid $rule;
+  .wrap { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 30px; padding: 12px 0; }
+  nav { display: flex; justify-content: center; gap: 4px; @include below(lg) { display: none; } }
+  nav a { @include mono(.68rem, .08em); padding: 8px 12px; color: $graphite; transition: color .3s;
+    span { color: $signal; margin-right: 6px; }
+    &:hover { color: $ink; } }
+  .acts { display: flex; gap: 8px; justify-content: end; @include below(sm) { .btn { display: none; } } }
+  @include below(lg) { .wrap { grid-template-columns: 1fr auto; } }
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  &__mark { width: 40px; height: 40px; border: 1.5px solid $ink; display: grid; place-items: center;
+    svg { width: 24px; height: 24px; transition: transform .8s $ease; } }
+  &:hover &__mark svg { transform: rotate(90deg); }
+  b { font-family: $f-display; font-size: 1.7rem; line-height: .9; font-weight: 400; display: block; }
+  small { @include mono(.56rem, .12em); color: $muted; }
+}
+.burger { display: none; width: 44px; height: 44px; border: 1.5px solid $ink; place-items: center; @include below(lg) { display: grid; } }
+.drawer {
+  position: fixed; inset: 0; z-index: 80; background-color: $print; color: $paper; padding: 22px 20px;
+  @include drafting(rgba(#fff, .03), rgba(#fff, .06));
+  display: flex; flex-direction: column; clip-path: inset(0 0 0 100%); transition: clip-path .7s $snap;
+  &.is-open { clip-path: inset(0); }
+  .x { align-self: flex-end; width: 44px; height: 44px; border: 1px solid rgba($paper, .3); font-size: 1.4rem; }
+  a.l { font-family: $f-display; font-size: 2.8rem; line-height: 1.1; padding: 10px 0; border-bottom: 1px solid rgba($paper, .12);
+    display: flex; justify-content: space-between; align-items: baseline;
+    span { @include mono(.7rem); color: $signal; } }
+  .b { margin-top: auto; display: grid; gap: 10px; }
+}
+
+// ---------- 7. Hero ----------
+.hero {
+  @include fluid(padding-top, 40px, 76px); @include fluid(padding-bottom, 70px, 120px);
+  .wrap { display: grid; grid-template-columns: 1.02fr .98fr; gap: clamp(36px, 5vw, 76px); align-items: center;
+    > * { min-width: 0; }
+    @include below(md) { grid-template-columns: 1fr; } }
+  h1 { @include fluid(font-size, 56px, 132px); margin: 30px 0 30px;
+    .ln { display: block; overflow: hidden; padding: .12em 0 .06em; margin-top: -.12em; }
+    .ln > span { display: inline-block; animation: rise 1.2s $ease both; }
+    @for $i from 1 through 3 { .ln:nth-child(#{$i}) > span { animation-delay: 100ms * $i; } }
+  }
+  .dim { position: relative; display: inline-block;
+    svg { position: absolute; left: 0; top: -.06em; width: 100%; height: 16px; overflow: visible; }
+    line { stroke: $signal; stroke-width: 1.3; }
+    text { font-family: $f-mono; font-size: 10px; fill: $signal; letter-spacing: .1em; }
+  }
+  &__cta { display: flex; gap: 10px; flex-wrap: wrap; margin: 34px 0 44px; }
+}
+.specs {
+  display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1.5px solid $ink;
+  @include below(sm) { grid-template-columns: 1fr 1fr; row-gap: 14px; }
+  > div { padding: 14px 14px 0 0;
+    & + div { padding-left: 14px; border-left: 1px solid $rule; }
+    @include below(sm) { &:nth-child(3) { padding-left: 0; border-left: 0; } } }
+  dt { @include mono(.6rem, .12em); color: $muted; }
+  dd { font-family: $f-display; font-size: 2.3rem; line-height: 1.05; }
+}
+
+// Figure panel (occlusal drawing)
+.fig {
+  background: $paper-hi; border: 1px solid $rule; padding: 18px;
+  @include corners($ink, 16px, 1.5px, -1px);
+  &__top, &__bot { display: flex; justify-content: space-between; gap: 12px; @include mono(.6rem, .1em); color: $graphite; }
+  &__top b { color: $ink; font-weight: 600; }
+  &__svg { position: relative; margin: 8px 0; aspect-ratio: 400 / 290; overflow: hidden;
+    svg { width: 100%; height: 100%; }
+    &::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 25%; background: linear-gradient(transparent, rgba($signal, .035), transparent); animation: scanline 5s linear infinite; pointer-events: none; }
+  }
+  &__read { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid $rule;
+    > div { padding: 10px 10px 0 0; & + div { padding-left: 10px; border-left: 1px solid $rule; } }
+    span { @include mono(.56rem, .12em); color: $muted; display: block; }
+    b { font-family: $f-mono; font-size: clamp(.85rem, 1.4vw, 1.05rem); font-weight: 600; }
+    .o { color: $signal; }
+  }
+}
+
+// ---------- 8. Case files ----------
+.cases {
+  &__head { display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: end; margin-bottom: 40px;
+    @include below(md) { grid-template-columns: 1fr; } }
+  &__head > * { min-width: 0; }
+  &__filters { display: flex; flex-wrap: wrap; border: 1.5px solid $ink; width: max-content; max-width: 100%; background: $paper-hi;
+    @include below(sm) { width: 100%; button { flex: 1 1 auto; padding: 11px 8px; } }
+    button { @include mono(.68rem, .1em); padding: 12px 15px; transition: background .3s, color .3s; border-right: 1px solid $rule;
+      &:last-child { border-right: 0; }
+      &.is-on { background: $ink; color: $paper-hi; }
+      &:not(.is-on):hover { background: rgba($signal, .12); } }
+  }
+  &__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+    > * { min-width: 0; }
+    @include below(md) { grid-template-columns: repeat(2, 1fr); }
+    @include below(sm) { grid-template-columns: 1fr; } }
+}
+.file {
+  background: $paper-hi; border: 1px solid $rule; display: flex; flex-direction: column;
+  transition: transform .6s $ease, box-shadow .6s $ease, opacity .9s $ease;
+  &:hover { transform: translateY(-5px); box-shadow: 0 30px 50px -35px rgba($ink, .5); }
+  &.is-hidden { display: none; }
+  &.is-wide { grid-column: span 2; @include below(sm) { grid-column: auto; } }
+  &.rv { @include stagger(8, 70ms); }
+  &__bar { display: flex; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid $rule; @include mono(.6rem, .1em); color: $graphite;
+    b { color: $ink; font-weight: 600; } .c { color: $signal; } }
+  &__cmp {
+    position: relative; aspect-ratio: 16 / 10; flex: 1 0 auto; overflow: hidden; cursor: ew-resize; touch-action: pan-y;
+    @include corners(rgba($ink, .45), 10px, 1px, 10px);
+    .layer { position: absolute; inset: 0; display: grid; place-items: center; padding: 6% 8% 9%; background: $paper-hi;
+      svg { width: 100%; height: 100%; } }
+    .layer--b { clip-path: inset(0 50% 0 0); background: #F3F1E8; }
+    .split { position: absolute; top: 0; bottom: 0; left: 50%; width: 1.5px; background: $signal; z-index: 4; pointer-events: none;
+      &::before { content: "◀ ▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: $signal; color: #fff; font-family: $f-mono; font-size: .56rem; letter-spacing: .2em; padding: 7px 8px; white-space: nowrap; } }
+    .lab { position: absolute; bottom: 12px; z-index: 5; @include mono(.56rem, .14em); pointer-events: none; padding: 4px 7px; background: $paper-hi; border: 1px solid $rule;
+      &--b { left: 14px; } &--a { right: 14px; color: $signal; border-color: $signal; } }
+  }
+  &__body { padding: 18px; border-top: 1px solid $rule; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: end; }
+  h3 { font-family: $f-display; font-weight: 400; font-size: 2rem; line-height: 1; margin-bottom: 12px; }
+  dl { display: flex; gap: 18px; flex-wrap: wrap; }
+  dt { @include mono(.54rem, .12em); color: $muted; }
+  dd { font-family: $f-mono; font-size: .78rem; font-weight: 600; }
+  &__open { width: 46px; height: 46px; border: 1.5px solid $ink; display: grid; place-items: center; transition: background .3s, color .3s, border-color .3s;
+    svg { width: 18px; height: 18px; }
+    &:hover { background: $signal; border-color: $signal; color: #fff; } }
+}
+.note { font-family: $f-mono; font-size: .66rem; color: $muted; margin-top: 22px; }
+
+// Lightbox as a technical sheet
+.sheet {
+  position: fixed; inset: 0; z-index: 100; background: rgba($ink, .8); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center; padding: 18px;
+  &.is-open { display: flex; }
+  &__panel { width: min(1120px, 100%); max-height: 94vh; overflow: auto; background-color: $paper-hi; display: grid; grid-template-columns: 1.35fr .65fr; animation: pop .5s $ease;
+    @include drafting(rgba($ink, .025), rgba($ink, .05));
+    @include below(md) { grid-template-columns: 1fr; } }
+  &__viz { padding: 22px; border-right: 1px solid $rule; display: flex; flex-direction: column; @include below(md) { border-right: 0; border-bottom: 1px solid $rule; } }
+  &__svg { flex: 1; display: grid; place-items: center; min-height: 300px; padding: 26px; @include corners($ink, 14px, 1.5px, 0px);
+    svg { width: 100%; height: auto; } @include below(sm) { min-height: 0; padding: 14px; } }
+  &__tl { margin-top: 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
+  &__play { width: 46px; height: 46px; background: $ink; color: $paper-hi; display: grid; place-items: center; svg { width: 16px; height: 16px; } &:hover { background: $signal; } }
+  &__m { @include mono(.78rem); font-weight: 600; min-width: 10ch; text-align: right; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; cursor: pointer;
+    &::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(90deg, $signal var(--p, 0%), $rule var(--p, 0%)); }
+    &::-moz-range-track { height: 2px; background: $rule; }
+    &::-moz-range-progress { height: 2px; background: $signal; }
+    &::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 22px; background: $signal; margin-top: -10px; border: 0; }
+    &::-moz-range-thumb { width: 12px; height: 22px; background: $signal; border: 0; border-radius: 0; } }
+  &__info { padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; position: relative; }
+  &__x { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border: 1.5px solid $ink; font-size: 1.3rem; &:hover { background: $ink; color: $paper-hi; } }
+  h3 { font-family: $f-display; font-weight: 400; font-size: 2.7rem; line-height: .95; padding-right: 44px; }
+  p { color: $graphite; font-size: .95rem; }
+  table { width: 100%; border-collapse: collapse; border-top: 1.5px solid $ink;
+    td { padding: 10px 0; border-bottom: 1px solid $rule; font-size: .9rem; }
+    td:first-child { @include mono(.58rem, .12em); color: $muted; width: 46%; }
+    td:last-child { font-family: $f-mono; font-weight: 600; font-size: .82rem; }
+    .live { color: $signal; } }
+  &__info .btn { margin-top: auto; }
+}
+
+// ---------- 9. Method (blueprint) ----------
+.method {
+  background-color: $print; color: $paper;
+  @include drafting($print-ln, rgba(160, 200, 255, .16));
+  .tag { color: rgba($paper, .6); }
+  .lead { color: rgba($paper, .62); }
+  .display em { color: $signal; }
+  &__head { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; margin-bottom: 70px; @include below(md) { grid-template-columns: 1fr; } }
+  &__rail { position: relative; display: grid; grid-template-columns: repeat(4, 1fr);
+    @include below(md) { grid-template-columns: 1fr 1fr; row-gap: 44px; }
+    @include below(sm) { grid-template-columns: 1fr; } }
+  &__line { position: absolute; left: 0; right: 0; top: 11px; height: 2px; @include below(md) { display: none; }
+    svg { width: 100%; height: 2px; overflow: visible; }
+    line { stroke: $signal; stroke-width: 1.5; stroke-dasharray: 1400; stroke-dashoffset: 1400; transition: stroke-dashoffset 2.4s $ease; } }
+  &__rail.in &__line line { stroke-dashoffset: 0; }
+}
+.node {
+  padding-right: 26px; position: relative;
+  &__dot { width: 23px; height: 23px; border: 1.5px solid $signal; background: $print; display: grid; place-items: center; margin-bottom: 26px; position: relative; z-index: 2;
+    &::after { content: ""; width: 7px; height: 7px; background: $signal; } }
+  &__k { @include mono(.6rem, .14em); color: $signal; }
+  h3 { font-family: $f-display; font-weight: 400; font-size: 2.4rem; line-height: 1; margin: 8px 0 12px; }
+  p { color: rgba($paper, .62); font-size: .94rem; max-width: 30ch; }
+  &__co { font-family: $f-mono; font-size: .6rem; color: rgba($paper, .35); margin-top: 16px; }
+}
+
+// ---------- 10. Exploded implant ----------
+.explode {
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(36px, 6vw, 90px); align-items: center; > * { min-width: 0; } @include below(md) { grid-template-columns: 1fr; } }
+  &__fig { background: $paper-hi; border: 1px solid $rule; padding: 20px; @include corners($ink, 16px, 1.5px, -1px);
+    svg { width: 100%; height: auto; }
+    .part { transition: transform .8s $ease; cursor: pointer; }
+    .part path, .part rect { transition: stroke .3s; }
+    .part.is-on path, .part.is-on rect { stroke: $signal; }
+    .lbl { font-family: $f-mono; font-size: 8.5px; letter-spacing: 1.2px; fill: $graphite; cursor: pointer; transition: fill .3s; }
+    .lbl.is-on { fill: $signal; }
+    .ld { stroke: $graphite; stroke-width: .8; transition: stroke .3s; }
+    .ld.is-on { stroke: $signal; }
+  }
+  &__fig:hover .part--crown { transform: translateY(-10px); }
+  &__fig:hover .part--fix { transform: translateY(10px); }
+  &__parts { display: grid; border-top: 1.5px solid $ink; margin: 28px 0; }
+  &__part { display: grid; grid-template-columns: 54px 1fr; gap: 14px; text-align: left; padding: 18px 0; border-bottom: 1px solid $rule; transition: padding .4s $ease;
+    > span { @include mono(.64rem); color: $muted; padding-top: 6px; }
+    b { font-family: $f-display; font-weight: 400; font-size: 1.9rem; line-height: 1; display: block; }
+    em { font-style: normal; color: $graphite; font-size: .92rem; display: block; max-height: 0; overflow: hidden; transition: max-height .5s $ease, margin .5s; }
+    &.is-on { padding-left: 10px; > span { color: $signal; } em { max-height: 90px; margin-top: 6px; } }
+  }
+}
+
+// ---------- 11. Doctor ----------
+.doc {
+  .wrap { display: grid; grid-template-columns: .85fr 1.15fr; gap: clamp(36px, 6vw, 90px); align-items: center; > * { min-width: 0; } @include below(md) { grid-template-columns: 1fr; } }
+  &__frame { position: relative; padding: 0 0 28px 28px; max-width: 480px; width: 100%;
+    .ph { aspect-ratio: 4 / 5; @include corners($signal, 22px, 2px, 10px); }
+    .ph img { filter: grayscale(1) contrast(1.05); }
+    .dimv { position: absolute; left: 6px; top: 0; bottom: 28px; width: 1px; background: $graphite;
+      &::before, &::after { content: ""; position: absolute; left: -4px; width: 9px; height: 1px; background: $graphite; }
+      &::before { top: 0; } &::after { bottom: 0; }
+      span { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%) rotate(-90deg); background: $paper; padding: 0 6px; white-space: nowrap; font-family: $f-mono; font-size: .56rem; letter-spacing: .1em; color: $graphite; } }
+    .dimh { position: absolute; left: 28px; right: 0; bottom: 6px; height: 1px; background: $graphite;
+      &::before, &::after { content: ""; position: absolute; top: -4px; width: 1px; height: 9px; background: $graphite; }
+      &::before { left: 0; } &::after { right: 0; }
+      span { position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%); background: $paper; padding: 0 6px; white-space: nowrap; font-family: $f-mono; font-size: .56rem; letter-spacing: .1em; color: $graphite; } }
+  }
+  table { width: 100%; border-collapse: collapse; margin: 28px 0 32px; border-top: 1.5px solid $ink;
+    td { padding: 12px 0; border-bottom: 1px solid $rule; vertical-align: top; }
+    td:first-child { @include mono(.6rem, .12em); color: $muted; width: 36%; padding-top: 16px; }
+    td:last-child { font-family: $f-display; font-size: 1.5rem; line-height: 1.15; }
+    tr { transition: background .3s; &:hover { background: rgba($signal, .06); } } }
+}
+
+// ---------- 12. Standards table ----------
+.std {
+  border-top: 1.5px solid $ink; margin-top: 50px;
+  &__row { display: grid; grid-template-columns: 80px 1.1fr 1.4fr 1fr; gap: 20px; align-items: baseline; padding: 24px 0; border-bottom: 1px solid $rule; transition: padding .4s $ease;
+    &:hover { padding-left: 12px; .std__v { color: $signal; } }
+    @include below(md) { grid-template-columns: 50px 1fr; row-gap: 8px; .std__d, .std__m { grid-column: 2; } } }
+  &__i { @include mono(.64rem); color: $muted; }
+  &__v { font-family: $f-display; font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1; transition: color .3s; }
+  &__d { color: $graphite; }
+  &__m { @include mono(.6rem); color: $signal; text-align: right; @include below(md) { text-align: left; } }
+}
+
+// ---------- 13. Rating ----------
+.rating {
+  padding-top: 0;
+  .wrap { display: grid; grid-template-columns: auto 1fr; gap: clamp(30px, 6vw, 90px); align-items: center; @include below(md) { grid-template-columns: 1fr; } }
+  &__n { font-family: $f-display; line-height: .8; @include fluid(font-size, 150px, 290px); letter-spacing: -.04em;
+    small { font-family: $f-mono; font-size: .09em; letter-spacing: .1em; color: $muted; vertical-align: top; margin-left: .4em; } }
+  &__bars { display: grid; gap: 8px; margin: 24px 0 30px; max-width: 460px; }
+  &__bar { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; font-family: $f-mono; font-size: .62rem;
+    i { height: 6px; background: $rule; position: relative; overflow: hidden;
+      &::after { content: ""; position: absolute; inset: 0; background: $ink; transform-origin: left; transform: scaleX(0); transition: transform 1.4s $ease; } } }
+  &__bars.in &__bar i::after { transform: scaleX(var(--w)); }
+  &__bars.in &__bar:first-child i::after { background: $signal; }
+}
+
+// ---------- 14. Visit ----------
+.visit {
+  padding-top: 0;
+  .wrap { display: grid; grid-template-columns: .9fr 1.1fr; border: 1.5px solid $ink; background: $paper-hi; @include below(md) { grid-template-columns: 1fr; } }
+  &__info { padding: clamp(26px, 4vw, 50px); border-right: 1.5px solid $ink; @include below(md) { border-right: 0; border-bottom: 1.5px solid $ink; }
+    h2 { margin: 18px 0 28px; } }
+  &__row { display: grid; grid-template-columns: 110px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid $rule;
+    > span { @include mono(.6rem, .12em); color: $muted; padding-top: 3px; }
+    a { @include measure-line; }
+    @include below(sm) { grid-template-columns: 1fr; gap: 2px; } }
+  &__btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+  &__map { position: relative; min-height: 460px; overflow: hidden;
+    iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: grayscale(1) contrast(1.1) brightness(1.05); }
+    &::after { content: ""; position: absolute; inset: 0; pointer-events: none; @include drafting(transparent, rgba($signal, .16), 24px, 72px); }
+    .xh { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
+      border: 1.5px solid $signal; border-radius: 50%;
+      &::before, &::after { content: ""; position: absolute; background: $signal; }
+      &::before { left: 50%; top: -18px; bottom: -18px; width: 1.5px; transform: translateX(-50%); }
+      &::after { top: 50%; left: -18px; right: -18px; height: 1.5px; transform: translateY(-50%); } }
+    .co { position: absolute; left: 14px; bottom: 14px; z-index: 2; background: $ink; color: $paper-hi; @include mono(.58rem); padding: 7px 10px; }
+    @include below(sm) { min-height: 320px; } }
+}
+
+// ---------- 15. Footer ----------
+.foot {
+  background: $ink; color: rgba($paper, .6); padding: 80px 0 28px; overflow: hidden;
+  &__big { font-family: $f-display; line-height: .85; letter-spacing: -.03em; color: transparent; -webkit-text-stroke: 1px rgba($paper, .55); @include fluid(font-size, 64px, 230px); white-space: nowrap;
+    em { color: $signal; -webkit-text-stroke: 0; } }
+  &__grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 30px; padding: 50px 0; border-bottom: 1px solid rgba($paper, .14); @include below(sm) { grid-template-columns: 1fr; }
+    h4 { @include mono(.62rem, .14em); color: $signal; margin-bottom: 14px; }
+    ul { list-style: none; display: grid; gap: 8px; }
+    a:hover { color: $paper; } }
+  &__bot { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 22px; @include mono(.58rem); }
+}
+
+// ---------- 16. Booking form ----------
+.fab { position: fixed; right: 18px; bottom: 18px; z-index: 60; width: 58px; height: 58px; background: #25D366; color: #fff; display: grid; place-items: center; border-radius: 50%; box-shadow: 0 14px 30px rgba(#25D366, .4); transition: transform .4s $ease;
+  svg { width: 28px; height: 28px; } &:hover { transform: scale(1.08); } }
+.form {
+  position: fixed; inset: 0; z-index: 110; background: rgba($ink, .7); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 18px;
+  &.is-open { display: flex; }
+  &__sheet { width: min(600px, 100%); max-height: 94vh; overflow: auto; background-color: $paper-hi; border: 1.5px solid $ink; animation: pop .5s $ease; position: relative;
+    @include drafting(rgba($ink, .025), rgba($ink, .05)); }
+  &__hd { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: $ink; color: $paper-hi; @include mono(.62rem, .12em);
+    button { color: $paper-hi; font-size: 1.3rem; width: 32px; height: 32px; } }
+  &__bd { padding: clamp(20px, 4vw, 34px); }
+  h3 { font-family: $f-display; font-weight: 400; font-size: 2.7rem; line-height: .95; margin-bottom: 6px; }
+  .sub { color: $graphite; font-size: .92rem; margin-bottom: 22px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1.5px solid $ink; border-left: 1px solid $rule; @include below(sm) { grid-template-columns: 1fr; } }
+  .f { border-right: 1px solid $rule; border-bottom: 1px solid $rule; padding: 10px 12px; display: grid; gap: 2px; background: rgba($paper-hi, .75); transition: background .3s;
+    &.full { grid-column: 1 / -1; }
+    > label { @include mono(.54rem, .14em); color: $muted; }
+    input, select { font: inherit; font-family: $f-mono; font-size: 16px; border: 0; background: transparent; outline: none; color: $ink; padding: 4px 0; width: 100%; }
+    &:focus-within { background: rgba($signal, .07); > label { color: $signal; } } }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px;
+    label { cursor: pointer; position: relative; }
+    input { position: absolute; opacity: 0; pointer-events: none; width: 1px; }
+    span { display: block; @include mono(.64rem); padding: 8px 10px; border: 1px solid $rule; background: $paper-hi; }
+    input:checked + span { background: $ink; color: $paper-hi; border-color: $ink; } }
+  .btn { width: 100%; margin-top: 18px; }
+  .fine { font-family: $f-mono; font-size: .6rem; color: $muted; text-align: center; margin-top: 10px; }
+}
+
+// ---------- 17. Reveal ----------
+.rv { opacity: 0; transform: translateY(28px); transition: opacity .9s $ease, transform .9s $ease; }
+.rv.in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .rv { opacity: 1; transform: none; }
+}
